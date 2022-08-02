@@ -78,7 +78,7 @@ def write_file(path, contents):
         wr.writerow(contents)
 
 
-def load_price_history_data(item, base_date="", limit=20):
+def load_price_history_data(item, base_date=None, limit=20):
     """
     아이템의 가격 정보를 가져오는 함수.
     base_date 기준으로 과거 데이터를 조회한다.
@@ -109,6 +109,8 @@ def load_price_history_data(item, base_date="", limit=20):
         for line in rdr:
             ind += 1
             price_date = _update_date(line[0])
+            if not base_date:
+                base_date = price_date
             if price_date == base_date:
                 append_flag = True
             if append_flag:
@@ -167,6 +169,9 @@ if __name__ == "__main__":
     print(rr)
 
     res = load_price_history_data("gold", "2022-07-15", 5)
+    print(res)
+
+    res = load_price_history_data("gold", limit=5)
     print(res)
 
     test_data = {
