@@ -2,6 +2,7 @@ import datetime
 from enum import Enum
 
 import util_modules
+from indicators import Indicators
 
 logger = util_modules.get_logger()
 
@@ -14,7 +15,7 @@ class Direction(Enum):
 class Position:
     def __init__(self, open_price, stop_loss_price, position):
         self.open_price: float = open_price
-        self.open_date: int = datetime.datetime.now().timestamp()
+        self.open_date: float = datetime.datetime.now().timestamp()
         self.stop_loss_price: float = stop_loss_price
         self.position: Direction = position
 
@@ -32,6 +33,12 @@ class Position:
                 self.stop_loss_price = new_stop_loss_price
 
 
+def _check_availability(possible_position_size):
+    if possible_position_size == 0:
+        return False
+    return True
+
+
 class TradeStrategy:
     def __init__(self, balance, item, tick_size, tick_value, risk=0.5):
         self.balance = balance
@@ -40,9 +47,7 @@ class TradeStrategy:
         self.tick_value = tick_value
         self.risk = risk
         self.position = None
-
-    def _get_price_history(self):
-        util_modules.load_price_history_data(item=self.item)
+        self.indicators = None
 
     def calculate_size(self, atr):
         max_tick_size = atr * 3 / self.tick_size
@@ -56,12 +61,24 @@ class TradeStrategy:
         if not self.position:
             return
 
-        self.position.update_stop_loss_price()
+        price_dict = util_modules.load_price_history_data(item=self.item, limit=20)
+        close_price = price_dict['close']
 
-    def _check_availability(self, possible_position_size):
-        if possible_position_size == 0:
-            return False
-        return True
+        # stop_loss =
+
+        self.position.update_stop_loss_price(close_price=close_price)
 
     def check_position_entry_price(self, price_history):
+        pass
 
+    def daily_update(self):
+        price_history = util_modules.load_price_history_data(item=self.item, limit=300)
+        self.indicators = Indicators(price_history=price_history)
+
+        latest_close_price = price_history[0]['close']
+        atr = self.indicators.atr()
+
+        moving_average_20 = self.indicators.moving_average(term=20)
+        moving_average_300 = self.indicators.moving_average(term=300)
+
+        possible_entry_position = Direction.BUY if moving_average_20 >= moving_average_300 else Direction.SELL
