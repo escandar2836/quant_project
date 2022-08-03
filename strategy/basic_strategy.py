@@ -1,10 +1,9 @@
 import datetime
 from enum import Enum
 
-from indicators import Indicators
-import util
+import util_modules
 
-logger = util.get_logger()
+logger = util_modules.get_logger()
 
 
 class Direction(Enum):
@@ -43,7 +42,7 @@ class TradeStrategy:
         self.position = None
 
     def _get_price_history(self):
-        util.load_price_history_data(item=self.item)
+        util_modules.load_price_history_data(item=self.item)
 
     def calculate_size(self, atr):
         max_tick_size = atr * 3 / self.tick_size
@@ -51,7 +50,6 @@ class TradeStrategy:
 
         max_risk_amount = self.balance * self.risk
         possible_position_count = max_risk_amount // stop_loss_per_position
-
         return possible_position_count
 
     def calculate_stop_loss_price(self):

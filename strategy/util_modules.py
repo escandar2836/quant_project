@@ -107,15 +107,16 @@ def load_price_history_data(item, base_date=None, limit=20):
         rdr = csv.reader(f)
         ind = 0
         for line in rdr:
-            ind += 1
+            # ind += 1
             price_date = _update_date(line[0])
             if not base_date:
                 base_date = price_date
-            if price_date == base_date:
+            if base_date >= price_date:
                 append_flag = True
             if append_flag:
                 history_data = _parse_history_data(line)
                 result_list.append(history_data)
+                ind += 1
 
             if ind == limit:
                 break
@@ -168,7 +169,7 @@ if __name__ == "__main__":
     rr = _update_date("2022년 7월 3일")
     print(rr)
 
-    res = load_price_history_data("gold", "2022-07-15", 5)
+    res = load_price_history_data("gold", "2022-05-15", 5)
     print(res)
 
     res = load_price_history_data("gold", limit=5)
