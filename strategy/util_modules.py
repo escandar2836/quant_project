@@ -2,6 +2,8 @@ import csv
 import logging
 import re
 
+from strategy.indicators import Indicators
+
 BASE_PATH = "/Users/mingihong/Documents/GitHub/quant_project/data"
 ITEM_LIST = [
     "cocoa",
@@ -52,16 +54,26 @@ def _update_price(target_price):
 
 
 def _parse_history_data(data):
-    # ['날짜', '종가', '오픈', '고가', '저가', '거래량', '변동 %']
-    result = {
-        "price_date": _update_date(data[0]),
-        "close": _update_price(data[1]),
-        "open": _update_price(data[2]),
-        "high": _update_price(data[3]),
-        "low": _update_price(data[4]),
-        "vol": data[5],
-        "volatility": data[6],
-    }
+    if len(data) == 7:
+        # ['날짜', '종가', '오픈', '고가', '저가', '거래량', '변동 %']
+        result = {
+            "price_date": _update_date(data[0]),
+            "close": _update_price(data[1]),
+            "open": _update_price(data[2]),
+            "high": _update_price(data[3]),
+            "low": _update_price(data[4]),
+            "vol": data[5],
+            "volatility": data[6],
+        }
+    else:
+        result = {
+            "price_date": _update_date(data[0]),
+            "close": _update_price(data[1]),
+            "open": _update_price(data[2]),
+            "high": _update_price(data[3]),
+            "low": _update_price(data[4]),
+            "volatility": data[5],
+        }
     return result
 
 
@@ -165,6 +177,49 @@ def write_transaction_log(data):
     write_file(path=transaction_log_file, contents=contents)
 
 
+def update_indicator_data(item_name, start_date=None, size=20):
+    price_history = load_price_history_data(item=item_name, base_date=start_date, limit=size)
+    indicator = Indicators(item_name=item_name, price_history=price_history)
+
+    # RSI 업데이트
+    rsi_path = f"{BASE_PATH}/{item_name}_rsi.csv"
+    for index in range(size - 1 - 14):
+        rsi_index = indicator.rsi(index=index)
+        write_file(path=rsi_path, contents=[price_history[index]['price_date'], rsi_index])
+
+    # atr 업데이트
+    atr_path = f"{BASE_PATH}/{item_name}_atr.csv"
+    for index in range(size - 1 - 20):
+        atr_index = indicator.atr(index=index)
+        write_file(path=atr_path, contents=[price_history[index]['price_date'], atr_index])
+
+    # moving average 업데이트
+    mvg_path_50 = f"{BASE_PATH}/{item_name}_moving_average_50.csv"
+    for index in range(size - 1 - 50):
+        mvg = indicator.moving_average(index=index, term=50)
+        write_file(path=mvg_path_50, contents=[price_history[index]['price_date'], mvg])
+
+    # moving average 업데이트
+    mvg_path_200 = f"{BASE_PATH}/{item_name}_moving_average_200.csv"
+    for index in range(size - 1 - 200):
+        mvg = indicator.moving_average(index=index, term=200)
+        write_file(path=mvg_path_200, contents=[price_history[index]['price_date'], mvg])
+
+    # obv 업데이트
+    # obv_path = f"{BASE_PATH}/{item_name}_obv.csv"
+    # prev_value = 0
+    # for index in range(size - 2, 1, -1):
+    #     prev_value = indicator.obv(index=index, prev_value=prev_value)
+    #     write_file(path=obv_path, contents=[price_history[index]['price_date'], prev_value])
+
+    # macd 업데이트
+    macd_path = f"{BASE_PATH}/{item_name}_macd.csv"
+    macd_list = []
+    for index in range(size - 26, 0, -1):
+        macd_index = indicator.macd(diff_list=macd_list, index=index)
+        write_file(path=macd_path, contents=[price_history[index]['price_date'], macd_index])
+
+
 if __name__ == "__main__":
     rr = _update_date("2022년 7월 3일")
     print(rr)
@@ -184,4 +239,4 @@ if __name__ == "__main__":
         "end": "2022-07-01",
     }
 
-    # write_transaction_log(test_data)
+    write_transaction_log(test_data)
