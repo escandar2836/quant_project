@@ -72,7 +72,7 @@ class TradeStrategy:
     - risk          : 한번 거래에서 감당할 리스크 %
     '''
 
-    def __init__(self, balance, item, tick_size, tick_value, risk=0.5):
+    def __init__(self, balance, item, risk=0.5):
         self.balance = balance
         self.item = item
         tick_info = ITEM_TICK_INFO[self.item]
