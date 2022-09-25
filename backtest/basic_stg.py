@@ -3,7 +3,7 @@ from backtesting.lib import crossover, TrailingStrategy
 from talib import SMA, ATR
 
 
-class SmaCross(TrailingStrategy):
+class BasicSmaStrategy(TrailingStrategy):
     # Define the two MA lags as *class variables*
     # for later optimization
     n1 = 60
