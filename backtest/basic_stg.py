@@ -30,6 +30,8 @@ class BasicSmaStrategy(TrailingStrategy):
             # short trades, and buy the asset
             if self.sma1[-1] > self.sma2[-1]:
                 price = max(self.data.High[-21:])
+                if price < self.sma1[-1]:
+                    return
                 # 여기서 주문은 무조건 limit order. 즉, 주문 가격이 현재 bar의 low보다 높으면 체결된다.
                 # 여기선 다른 방식으로 동작해야 하기에 수정이 필요하다.
                 self.buy(size=position_size, stop=price)
@@ -38,8 +40,10 @@ class BasicSmaStrategy(TrailingStrategy):
             # long trades, and sell the asset
             elif self.sma2[-1] > self.sma1[-1]:
                 price = min(self.data.Low[-21:])
+                if price > self.sma1[-1]:
+                    return
                 # self.sell(size=position_size * -1, limit=price, sl=price + self.atr[-1] * 3)
-                self.sell(size=position_size * -1, stop=price)
+                self.sell(size=position_size, stop=price)
 
     def calculate_position_size(self):
         atr = self.atr[-1]
