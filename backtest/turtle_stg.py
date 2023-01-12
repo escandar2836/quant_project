@@ -7,12 +7,12 @@ from talib import SMA, ATR
 
 
 class TurtleStrategy(SignalStrategy):
-    risk = 1
+    risk = 0.5
     n1 = 20
     n2 = 55
-    last_profit = 0
-    closed_trades_count = 0
+    checked_closed_trade_idx = 0
     skip_breakout = False
+    breakout_skipped = False
 
     def init(self):
         # In init() and in next() it is important to call the
@@ -42,6 +42,10 @@ class TurtleStrategy(SignalStrategy):
 
         breakout_price_dict = self.check_breakout_price()
 
+        if self.skip_breakout:
+            if self.data.High[-1] > breakout_price_dict['buy_breakout'] or self.data.Low[-1] < breakout_price_dict['sell_breakout']:
+                self.skip_breakout = False
+
         # position이 있다면
         if self.position:
             # 걸려있던 주문 취소하고 2주 돌파값으로 반대방향 주문
@@ -51,6 +55,15 @@ class TurtleStrategy(SignalStrategy):
                 self.trades[0].sl = min(self.trades[0].sl, breakout_price_dict['sell_sl'])
         # position이 없다면
         else:
+            if self.skip_breakout:
+                return
+
+            if self.checked_closed_trade_idx < len(self.closed_trades):
+                self.checked_closed_trade_idx = len(self.closed_trades)
+                if self.closed_trades[-1].pl > 0:
+                    self.skip_breakout = True
+                    return
+
             position_size = self.calculate_position_size()
             if not position_size:
                 return
