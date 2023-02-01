@@ -1,10 +1,12 @@
 import os
 
-from backtesting import Backtest
-from backtesting.test import GOOG
 import pandas as pd
 
 from backtest.basic_stg import BasicSmaStrategy
+# from backtest.swing_stg import SwingStrategy
+from backtest.donchian_stg import DonchianStrategy
+from backtest.turtle_stg import TurtleStrategy
+from backtesting import Backtest
 
 
 def test(item, strategy, dir_path='./'):
@@ -17,7 +19,9 @@ def test(item, strategy, dir_path='./'):
             price_df[col] = price_df[col].apply(lambda val: float(val.replace(',', '')) if val != '-' else 0)
     price_df = price_df.sort_index(ascending=True)
 
-    bt = Backtest(price_df, strategy, commission=.002, cash=10**5)
+    price_df = price_df.iloc[365 * 10 * -1:]
+
+    bt = Backtest(price_df, strategy, commission=.002, cash=10**10)
 
     result = bt.run()
     trades = result._trades
@@ -27,10 +31,12 @@ def test(item, strategy, dir_path='./'):
         os.makedirs(f'{dir_path}')
 
     bt.plot(filename=filename)
+    print(trades)
 
 
 if __name__=='__main__':
-    # for item in ['bitcoin', 'cocoa', 'coffee', 'corn', 'dow', 'gold', 'nasdaq', 'natural_gas', 'pork', 'wheat', 'wti_oil']:
-    # # for item in ['wheat', 'wti_oil']:
-    #     test(item, BasicSmaStrategy, dir_path='./basic_stg')
-    test('wti_oil', BasicSmaStrategy, dir_path='./basic_stg')
+    # test('nasdaq', DonchianStrategy, dir_path='./turtle_stg_s1')
+
+    # print(1)
+    for item in ['bitcoin', 'cocoa', 'coffee', 'corn', 'dow', 'gold', 'nasdaq', 'natural_gas', 'pork', 'wti_oil']:
+        test(item, DonchianStrategy, dir_path='./donchian_stg')
